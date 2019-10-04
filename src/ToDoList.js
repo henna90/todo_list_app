@@ -1,13 +1,16 @@
 import React from 'react'
 import ToDoForm from './ToDoForm';
 import Todo from './Todo'
+import Today from './Today'
+import ThisWeek from'./ThisWeek'
 
 class ToDoList extends React.Component{
     constructor() {
         super();
         this.state = {
         todos:[],
-        todoToShow:'all'
+        todoToShow:'all',
+        priorityToShow:'all'
     }
 }
 
@@ -16,6 +19,7 @@ class ToDoList extends React.Component{
         this.setState({
             todos: [todo,...this.state.todos]
         });
+        console.log("TODOS ======>", this.state.todos)
     }
 
     toggleComplete = id => {
@@ -55,7 +59,10 @@ class ToDoList extends React.Component{
       
       render() {
 
+        // let  doToday = this.state.toDo
+
         let todos = [];
+        
 
         if(this.state.todoToShow === 'all'){
             todos = this.state.todos;
@@ -65,14 +72,29 @@ class ToDoList extends React.Component{
             todos = this.state.todos.filter(todo => todo.complete)
         }
         return (
+            
           <div className="">
+              <h1 className="heading"> Todo List </h1>
               <ToDoForm onSubmit={this.addTodo}/>
               {todos.map(todo => (
-                  <Todo key={todo.id} todo={todo}
+                  <Todo key={todo.id} todo={todo} 
                   toggleComplete={()=> this.toggleComplete(todo.id)}
                   onDelete={() => this.handleDelete(todo.id)}
-                  text={todo.text}/>
+                  text={todo.text}
+                  priority={todo.priority}/>
               ))}
+              <div style = {{ display: "flex", justifyContent:'left' }}>
+              to do today : 
+              {this.state.todos.filter(todo => todo.priority === 'today').map(todo => (
+                <Today key={todo.id} todo={todo} text={todo.text}/>
+              ))}
+              </div>
+              <div>
+              to do this week : 
+              {this.state.todos.filter(todo => todo.priority === 'this week').map(todo => (
+                <ThisWeek key={todo.id} todo={todo} text={todo.text}/>
+              ))}
+              </div>
               <div>
                   todos left : 
                   {this.state.todos.filter(todo => !todo.complete).length}
