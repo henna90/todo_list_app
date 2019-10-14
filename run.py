@@ -1,76 +1,103 @@
-# from flask import Flask, render_template, redirect, request
-# from model import Task, connect_to_db, db
-# from flask_restful import Api
-# from flask_sqlalchemy import SQLAlchemy
-
-# import model,resources
-
-
-# app = Flask(__name__, static_folder="build/static", template_folder="build")
-# api=Api(app)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# app.config['SECRET_KEY'] = 'some-secret-string'
-
-# db = SQLAlchemy(app)
-
-# @app.before_first_request
-# def create_tables():
-#     db.create_all()
-
-# api.add_resource(resources.UserRegistration, '/registration')
-# api.add_resource(resources.UserLogin, '/login')
-# api.add_resource(resources.UserLogoutAccess, '/logout/access')
-# api.add_resource(resources.UserLogoutRefresh, '/logout/refresh')
-# api.add_resource(resources.TokenRefresh, '/token/refresh')
-# api.add_resource(resources.AllUsers, '/users')
-# api.add_resource(resources.SecretResource, '/secret')
-
-
-
-# @app.route("/")
-# def homepage():
-#     return render_template('index.html')
-# print('Starting Flask!')
-
-# @app.route("/addtask",methods=["POST"])
-# def addtask():
-   
-#     task = request.form['text']
-#     priority = request.form['priority']
-#     #add to db
-#     new_task = Task(task=task, priority=priority)
-#     db.session.add(new_task)
-#     db.session.commit()
-
-#     #return a jsonified json object 
-
-#     return "to do added...."
-
-
-
-# if __name__ == "__main__":
-#     app.debug=True
-#     connect_to_db(app)
-#     app.run(port=3000)
-   
-#     print('connected to server')
-
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from passlib.hash import pbkdf2_sha256 as sha256
 # import psycopg2-binary
-
+db = SQLAlchemy()
 app = Flask(__name__)
 api = Api(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///thingstodo'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'some-secret-string'
 
-db = SQLAlchemy(app)
+class UserModel(db.Model):
+    __tablename__ = 'users'
 
+    id = db.Column(db.Integer, primary_key = True)
+    username = db.Column(db.String(120), unique = True, nullable = False)
+    password = db.Column(db.String(120), nullable = False)
+    
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+    @classmethod
+    def find_by_username(cls, username):
+        return cls.query.filter_by(username = username).first()  
+
+    @classmethod
+    def return_all(cls):
+        def to_json(x):
+            return {
+                'username': x.username,
+                'password': x.password
+            }
+        return {'users': list(map(lambda x: to_json(x), UserModel.query.all()))}
+
+    @classmethod
+    def delete_all(cls):
+        try:
+            num_rows_deleted = db.session.query(cls).delete()
+            db.session.commit()
+            return {'message': '{} row(s) deleted'.format(num_rows_deleted)}
+        except:
+            return {'message': 'Something went wrong'} 
+
+    @staticmethod
+    def generate_hash(password):
+        return sha256.hash(password)  
+
+    @staticmethod
+    def verify_hash(password, hash):
+        return sha256.verify(password, hash)
+
+
+class RevokedTokenModel(db.Model):
+    __tablename__ = 'revoked_tokens'
+    id = db.Column(db.Integer, primary_key = True)
+    jti = db.Column(db.String(120))
+    
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
+    
+    @classmethod
+    def is_jti_blacklisted(cls, jti):
+        query = cls.query.filter_by(jti = jti).first()
+        return bool(query)
+
+
+
+class TaskModel(db.Model):
+    __tablename__ = 'tasks'
+
+    task_id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, nullable = False)
+    task = db.Column(db.String(120), unique = True, nullable = False)
+    description = db.Column(db.String(200), nullable = False)
+
+    # user = db.relationship("UserModel", backref=db.backref("tasks", order_by=task_id))
+    
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()    
+    @classmethod
+    def return_all(cls):
+        def to_json(x):
+            return {
+                'task': x.task,
+                'description': x.description
+            }
+        return {'tasks': list(map(lambda x: to_json(x), TaskModel.query.all()))}     
+
+# app = Flask(__name__)
+# api = Api(app)
+
+def connect_to_db(app):
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///thingstodo'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = 'some-secret-string'
+
+    db.app = app
+    db.init_app(app)
 
 @app.before_first_request
 def create_tables():
@@ -86,9 +113,11 @@ app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
-    return models.RevokedTokenModel.is_jti_blacklisted(jti)
+    return RevokedTokenModel.is_jti_blacklisted(jti)
 
-import views, models, resources
+# import views, models, resources
+import views, resources
+
 
 api.add_resource(resources.UserRegistration, '/registration')
 api.add_resource(resources.UserLogin, '/login')
@@ -102,3 +131,13 @@ api.add_resource(resources.AllTasks, '/all_tasks')
 api.add_resource(resources.SecretResource, '/secret')
 api.add_resource(resources.Todos,'/todos')
 api.add_resource(resources.AddTask, '/addtask')
+
+
+
+
+
+
+
+# app = Flask(__name__)
+
+connect_to_db(app)

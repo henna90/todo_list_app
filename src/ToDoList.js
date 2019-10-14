@@ -14,6 +14,11 @@ class ToDoList extends React.Component{
     }
 }
 
+componentDidMount(){
+  console.log("hello")
+  
+}
+
     addTodo = (todo) => {
         //add todo to current state of todos 
         this.setState({

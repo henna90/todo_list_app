@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from models import UserModel, RevokedTokenModel, TaskModel
+from run import UserModel, RevokedTokenModel, TaskModel
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt)
 
 
@@ -7,14 +7,24 @@ parser = reqparse.RequestParser()
 parser.add_argument('username', help = 'This field cannot be blank', required = False)
 parser.add_argument('password', help = 'This field cannot be blank', required = False)
 parser.add_argument('name', help = 'This field cannot be blank', required = False)
+parser.add_argument('task', help = 'This field cannot be blank', required = False)
+parser.add_argument('description', help = 'This field cannot be blank', required = False)
 
 class UserRegistration(Resource):
     def post(self):
+        print("post request to registration page")
+
         data = parser.parse_args()
+        print(data['username'], data['password'])
+
+
+        
 
         #query db to see if user exsists
         if UserModel.find_by_username(data['username']):
           return {'message': 'User {} already exists'. format(data['username'])}
+
+         
 
         new_user = UserModel(
             username = data['username'],
@@ -119,8 +129,10 @@ class Todos(Resource):
         # UserModel.find_by_username(current_user)
 
 
-parser.add_argument('task', help = 'This field cannot be blank', required = False)
-parser.add_argument('description', help = 'This field cannot be blank', required = False)
+
+
+
+
 class AddTask(Resource):
     @jwt_required
     def post(self):
@@ -132,7 +144,7 @@ class AddTask(Resource):
         user = UserModel.find_by_username(username = current_user)
         user_id = user.id
 
-        print("**************************",task, description)
+        print("**************************",user_id)
 
         new_task = TaskModel(
                         user_id= user_id, 
@@ -140,7 +152,8 @@ class AddTask(Resource):
                         description=description)
 
         try:
-            new_task.save_to_db() 
+            new_task.save_to_db()
+            return {'message': "your task has been added"} 
 
         except:    
             return {'message': 'Something went wrong'}, 500                
