@@ -1,11 +1,15 @@
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey
 from flask_jwt_extended import JWTManager
 from passlib.hash import pbkdf2_sha256 as sha256
-# import psycopg2-binary
+from flask_cors import CORS
+
+
 db = SQLAlchemy()
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 
 
@@ -70,15 +74,28 @@ class TaskModel(db.Model):
     __tablename__ = 'tasks'
 
     task_id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, nullable = False)
+    user_id = db.Column(db.Integer, ForeignKey("users.id"))
     task = db.Column(db.String(120), unique = True, nullable = False)
     description = db.Column(db.String(200), nullable = False)
+    # user = db.relationship("User", backref=db.backref("ratings", order_by=rating_id))
 
-    # user = db.relationship("UserModel", backref=db.backref("tasks", order_by=task_id))
+    user = db.relationship("UserModel", backref=db.backref("tasks", order_by=task_id))
     
     def save_to_db(self):
         db.session.add(self)
-        db.session.commit()    
+        db.session.commit()  
+
+
+    def to_json(self):
+        return{'taskId':self.task_id,
+                'userId': self.user_id,
+                'task':self.task,
+                'description':self.description} 
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()            
+
     @classmethod
     def return_all(cls):
         def to_json(x):
@@ -127,10 +144,13 @@ api.add_resource(resources.TokenRefresh, '/token/refresh')
 api.add_resource(resources.AllUsers, '/users')
 
 
+
 api.add_resource(resources.AllTasks, '/all_tasks')
 api.add_resource(resources.SecretResource, '/secret')
 api.add_resource(resources.Todos,'/todos')
 api.add_resource(resources.AddTask, '/addtask')
+api.add_resource(resources.DeleteTask, '/deletetask')
+api.add_resource(resources.Test,'/test')
 
 
 

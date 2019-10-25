@@ -1,19 +1,22 @@
 import React from 'react';
-// import logo from './logo.svg';
 import './App.css';
-// import AddItem from './AddItem'
-// import DisplayTask from'./DisplayTask'
-import ToDoList from'./ToDoList'
+import Main from './Main'
+
+
+
 
 class App extends React.Component {
 
+
+
+
   render() {
-    return (
-      <div className="App">
-        <ToDoList />
-      </div>
-    )
-  }
+
+    
+  
+    return( <Main />)
+        
+}
 }
 
 export default App;

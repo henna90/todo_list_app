@@ -1,120 +1,82 @@
-import React from 'react'
-import ToDoForm from './ToDoForm';
-import Todo from './Todo'
-import Today from './Today'
-import ThisWeek from'./ThisWeek'
+import React from "react";
+import axios from "axios";
+import cookie from "react-cookies";
+// import Addtodo from './Addtodo'
+// import { thisExpression } from "@babel/types";
 
-class ToDoList extends React.Component{
-    constructor() {
-        super();
-        this.state = {
-        todos:[],
-        todoToShow:'all',
-        priorityToShow:'all'
-    }
+class Todolist extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      todos: []
+    };
+    this.onDelete = this.onDelete.bind(this);
+  }
+
+  componentDidMount() {
+    console.log("===============", cookie.load("Access Token"));
+    var token = cookie.load("Access Token");
+
+    axios.defaults.headers.common = { Authorization: `Bearer ${token}` };
+
+    axios
+      .get("http://127.0.0.1:5000/todos")
+      .then(response => {
+        console.log(response.data, "=================++++++++++");
+        this.setState({ todos: response.data });
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+
+
+  onDelete(event) {
+    const taskId = parseInt(event.target.value);
+    this.setState({
+      todos: this.state.todos.filter(todo => todo.taskId !== taskId)
+    });
+    let data = { task_id: event.target.value };
+
+    axios
+      .post("http://127.0.0.1:5000/deletetask", data)
+      .then(response => {
+        console.log(response);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+
+    // for (var i = 0; i < this.state.todos.length; i++) {
+    //   if (this.state.todos[i]["taskId"] == event.target.value) {
+    //     this.state.todos.splice(i, 1);
+    //   }
+    // }
+    event.preventDefault();
+  }
+
+  render() {
+    const todos = this.state.todos.map(todo => (
+      <div className="form" key={todo.taskId}>
+        Task:
+        <p>{todo.task}</p>
+        Description:
+        <p>{todo.description}</p>
+        <button onClick={this.onDelete} value={todo.taskId}>
+          {" "}
+          X{" "}
+        </button>
+      </div>
+    ));
+
+    return( 
+      <div>
+        {/* <Addtodo /> */}
+        {todos}
+      </div>
+    )
+  }
 }
 
-componentDidMount(){
-  console.log("hello")
-  
-}
-
-    addTodo = (todo) => {
-        //add todo to current state of todos 
-        this.setState({
-            todos: [todo,...this.state.todos]
-        });
-        console.log("TODOS ======>", this.state.todos)
-    }
-
-    toggleComplete = id => {
-        console.log("toggleComplete")
-        this.setState(state => ({
-          todos: state.todos.map(todo => {
-            if (todo.id === id) {
-              
-              return {
-                ...todo,
-                complete: !todo.complete
-              };
-            } else {
-              return todo;
-            }
-          })
-        }));
-      };
-
-      updateTodoToShow = (s) =>{
-          this.setState({todoToShow:s})
-      }
-
-      handleDelete = id =>{
-          this.setState({ 
-          todos : this.state.todos.filter(todo =>todo.id !== id)
-          });
-    }
-
-    removeCompleteTodos = id => {
-        this.setState({todos : this.state.todos.filter(todo => !todo.complete)
-
-
-        });
-    }
-    
-      
-      render() {
-
-        // let  doToday = this.state.toDo
-
-        let todos = [];
-        
-
-        if(this.state.todoToShow === 'all'){
-            todos = this.state.todos;
-        }else if(this.state.todoToShow === 'active') {
-            todos = this.state.todos.filter(todo => !todo.complete)
-        }else if(this.state.todoToShow === 'complete') {
-            todos = this.state.todos.filter(todo => todo.complete)
-        }
-        return (
-            
-          <div className="">
-              <h1 className="heading"> Todo List </h1>
-              <ToDoForm onSubmit={this.addTodo}/>
-              {todos.map(todo => (
-                  <Todo key={todo.id} todo={todo} 
-                  toggleComplete={()=> this.toggleComplete(todo.id)}
-                  onDelete={() => this.handleDelete(todo.id)}
-                  text={todo.text}
-                  priority={todo.priority}/>
-              ))}
-              <div style = {{ display: "flex", justifyContent:'left' }}>
-              to do today : 
-              {this.state.todos.filter(todo => todo.priority === 'today').map(todo => (
-                <Today key={todo.id} todo={todo} text={todo.text}/>
-              ))}
-              </div>
-              <div>
-              to do this week : 
-              {this.state.todos.filter(todo => todo.priority === 'this week').map(todo => (
-                <ThisWeek key={todo.id} todo={todo} text={todo.text}/>
-              ))}
-              </div>
-              <div>
-                  todos left : 
-                  {this.state.todos.filter(todo => !todo.complete).length}
-              </div>
-              <button onClick={()=> {this.updateTodoToShow('all')}}>All</button>
-              <button onClick={()=> {this.updateTodoToShow('active')}}>active</button>
-              <button onClick={()=> {this.updateTodoToShow('complete')}}>complete</button>
-              {this.state.todos.some(todo => todo.complete) ? <div>
-                  <button onClick={this.removeCompleteTodos}> remove completed todos</button>
-              </div> : null}
-            
-            
-          </div>
-        )
-      }
-    }
-    
-export default ToDoList;
+export default Todolist;

@@ -36,3 +36,24 @@
   color:grey;
   border-bottom: 1px solid grey;
 }
+
+.nav{
+  color:red;
+}
+
+.form{
+  text-align: center;
+  padding: 50px;
+}
+
+.todo{
+  text-align: center;
+  size: 10px;
+  color: black;
+  border: 2px solid red;
+  padding: 10px;
+}
+
+h1{
+  text-align: left;
+}
