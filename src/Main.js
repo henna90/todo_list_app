@@ -91,57 +91,28 @@ constructor() {
             )
         }else {
         return(
-            <Router>
-                    <div className="nav">
-                    <Link to="/Login">Login</Link>
-                    </div>
-                    <br />
             
-                    <Link to="/Registration">Register</Link>
-              
-                <Switch>
-                    <Route path="/login">
-                        <Login />
-                    </Route>    
-                    <Route path="/Registration">
-                        <Register />
-                    </Route>
-                </Switch>
-
-           </Router>
-
-            // </form> 
-
-            // <Access handleLoggin={this.handleLoggin} />
+            <Login />
            
         //     <Router>
-        //   <div className="App">
-        //     <nav>
-        //       <ul>
-             
-        //         <li>
-        //           <Link to="/Login" >Login</Link>
-        //         </li>
-        //         <li>
-        //           <Link to="/Register">Register</Link>
-        //         </li>
-        //       </ul>
-        //     </nav>
-    
-        //     {/* A <Switch> looks through its children <Route>s and
-        //         renders the first one that matches the current URL. */}
+        //             <div className="nav">
+        //             <Link to="/Login">Login</Link>
+        //             </div>
+        //             <br />
             
-        //     <Switch>
-        //       <Route path="/Login">
-        //         <Login />
-        //       </Route>
-        //       <Route path="/Register">
-        //         <Register />
-        //       </Route>
+        //             <Link to="/Registration">Register</Link>
+              
+        //         <Switch>
+        //             <Route path="/login">
+        //                 <Login />
+        //             </Route>    
+        //             <Route path="/Registration">
+        //                 <Register />
+        //             </Route>
+        //         </Switch>
 
-        //     </Switch>
-        //     </div>
-        // </Router>
+        //    </Router>
+
         )
     }
 }

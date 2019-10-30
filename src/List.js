@@ -6,11 +6,11 @@ class List extends React.Component{
 
 
   render(){
-      return (<div className="todo">
-        <button value={this.props.id} name={this.props.todo} onClick={this.props.deleteToDo}></button>
-      <h1>{this.props.todo}</h1> <br/>
-      {this.props.description}
-    </div>)
+      return (<ul>
+        {/* <button value={this.props.id} name={this.props.todo} onClick={this.props.deleteToDo}></button> */}
+        <li className="task">Task : {this.props.todo} <br/> Description:{this.props.description}<span><button className="done" value={this.props.id} name={this.props.todo} onClick={this.props.deleteToDo}>X</button></span> </li>
+      
+      </ul>)
   }
 }
 

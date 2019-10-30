@@ -12,33 +12,53 @@ parser.add_argument('task', help = 'This field cannot be blank', required = Fals
 parser.add_argument('description', help = 'This field cannot be blank', required = False)
 parser.add_argument('task_id', help = 'This field cannot be blank', required = False)
 
+# def tail(input_list):
+#     """Return all elements of the input list except the first.
+
+#     For example:
+
+#         >>> tail(['Jan', 'Feb', 'Mar'])
+#         ['Feb', 'Mar']
+#     """
+
+#     return input_list[1:]
+
+def does_user_exist(username, password):
+    """ if user exists in database returns an error message.
+    >>> does_user_exist('Bubski', 'password')
+    {'message': 'User Bubski already exists'}
+    """
+  
+    if UserModel.find_by_username(username):
+        response = {'message': 'User {} already exists'. format(username)}
+        return response
+
+def create_new_user(username, password):
+    new_user = UserModel(
+            username = username,
+            password = UserModel.generate_hash(password)
+        )
+    return new_user    
+
+
 class UserRegistration(Resource):
     def post(self):
         print("post request to registration page")
 
         data = parser.parse_args()
-        print(data['username'], data['password'])
+        username = data['username']
+        password = data['password']
 
-
-        
-
-        #query db to see if user exsists
-        if UserModel.find_by_username(data['username']):
-          return {'message': 'User {} already exists'. format(data['username'])}
-
+        does_user_exist(username, password)    
          
-
-        new_user = UserModel(
-            username = data['username'],
-            password = UserModel.generate_hash(data['password'])
-        )
+        new_user = create_new_user(username, password)
 
         try:
             new_user.save_to_db()
-            access_token = create_access_token(identity = data['username'])
-            refresh_token = create_refresh_token(identity = data ['username'])
+            access_token = create_access_token(identity = username)
+            refresh_token = create_refresh_token(identity = username)
             return jsonify({
-                'message': 'User {} was created'.format( data['username']),
+                'message': 'User {} was created'.format( username),
                 'access_token' : access_token,
                 'refresh_token': refresh_token
             })
@@ -53,13 +73,14 @@ class UserRegistration(Resource):
 class UserLogin(Resource):
     def post(self):
         data = parser.parse_args()
-        print(data,"===============")
-        current_user = UserModel.find_by_username(data['username'])
+        username = data['username']
+        
+        current_user = UserModel.find_by_username(username)
         print(data['password'],"================", current_user.password )
         if not current_user:
             print("user not found")
             
-            return jsonify({'message': 'User {} doesn\'t exist'.format(data['username'])})
+            return jsonify({'message': 'User {} doesn\'t exist'.format(username)})
         
         if UserModel.verify_hash(data['password'], current_user.password):
             
@@ -143,14 +164,27 @@ class SecretResource(Resource):
             'answer': 42
         }
 
+def current_user(username):
+    """returns current users object.
+    >>> current_user("Bubski")
+    <UserModel 1>
+
+    """
+    return UserModel.find_by_username(username= username)    
+
+def get_all_task_for_user(user_id):
+    return TaskModel.query.filter_by(user_id = user_id).all()
+
+
 class Todos(Resource):
     @jwt_required
     def get(self):
         current_user = get_jwt_identity()
-        user = UserModel.find_by_username(username= current_user)
+        user = UserModel.find_by_username(username= current_user)   
+        # user = current_user(current_user)
         user_id = user.id
         
-        tasks = TaskModel.query.filter_by(user_id = user_id).all()
+        tasks = get_all_task_for_user(user_id)
         
         return jsonify([task.to_json() for task in tasks])
         # return jsonify({"hello": 55})
@@ -159,27 +193,30 @@ class Todos(Resource):
         # UserModel.find_by_username(current_user)
 
 
+def find_user(current_user):
+    return UserModel.find_by_username(username = current_user)
 
 
-
-
+def add_new_task_to_db(user_id,task,description):
+   
+    
+    return  TaskModel(
+                        user_id= user_id, 
+                        task=task, 
+                        description=description)
+ 
 class AddTask(Resource):
     @jwt_required
     def post(self):
         current_user = get_jwt_identity()
-        data = parser.parse_args()
-        print(data)
-        task = data['task']
-        description=data['description']
-        user = UserModel.find_by_username(username = current_user)
+        user = find_user(current_user)
         user_id = user.id
 
-        print("**************************",user_id)
+        data = parser.parse_args()
+        task = data['task']
+        description=data['description']
 
-        new_task = TaskModel(
-                        user_id= user_id, 
-                        task=task, 
-                        description=description)
+        new_task = add_new_task_to_db(user_id,task,description)
 
         try:
             new_task.save_to_db()
@@ -188,20 +225,27 @@ class AddTask(Resource):
         except:    
             return {'message': 'Something went wrong'}, 500        
 
-
+def get_current_user():
+    return get_jwt_identity()
 class DeleteTask(Resource):
     @jwt_required
     def post(self):
-        print("hit delete task")
-        current_user = get_jwt_identity()
+        # print("hit delete task")
+        # current_user = get_jwt_identity()
+        current_user = get_current_user()
         print("current user", current_user)
         data = parser.parse_args()
         task_id = data['task_id']
         task = data['task']
         print(task)
         print(task_id)
+
         current_task = TaskModel.query.filter_by(task_id = task_id).one()
-        # current_task = TaskModel.filter(task_id = task_id).one()
+
+        if not current_task:
+            return {'message': 'Something went wrong'}, 500
+
+        print(current_task, "<<<<<<<<=========")
         print("current task", current_task.task)
         try:
             current_task.delete()

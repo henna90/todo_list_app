@@ -46,14 +46,25 @@
   padding: 50px;
 }
 
-.todo{
+.register{
   text-align: center;
-  size: 10px;
-  color: black;
-  border: 2px solid red;
-  padding: 10px;
+  
 }
 
-h1{
-  text-align: left;
+.done{text-align: right;
+position: absolute;}
+
+ul li{cursor: pointer;
+position: relative;
+padding: 12px 8px 12px 40px;
+list-style-type: none;
+background: #eee;
+font-size: 18px;
+transition: 0.2s;
+
+/* make the list items unselectable */
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
 }
