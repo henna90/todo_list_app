@@ -68,3 +68,9 @@ transition: 0.2s;
 -ms-user-select: none;
 user-select: none;
 }
+
+.logout{
+  text-align: right;
+  align-content: right;
+}
+

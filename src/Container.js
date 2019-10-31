@@ -3,20 +3,26 @@ import Addtodo from "./Addtodo";
 import List from "./List";
 import axios from "axios";
 import cookie from "react-cookies";
+import Logout from './Logout'
+import 'bootstrap/dist/css/bootstrap.css';
 
 
 class Container extends React.Component {
   constructor() {
     super();
     this.state = {
-      todo: []
+      todo: [],
+      loggedOut: false
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
+    this.handleLogout = this.handleLogout.bind(this)
   }
 
   getToken() {
+    console.log("=========ACCESS TOKEN",cookie.load("Access Token") )
     return cookie.load("Access Token");
+    
   }
 
   componentDidMount() {
@@ -84,15 +90,28 @@ class Container extends React.Component {
     console.log(event.target.name);
   }
 
+  handleLogout(event){
+    alert("logout was clicked")
+    cookie.remove("Access Token",{ path: '/' })
+    this.setState({loggedOut: true})
+    event.preventDefault()
+  }
+
   render() {
     let todos = [];
     if (this.state.todos !== undefined) {
       console.log(todos, "???????????????");
       todos = this.state.todos;
     }
+    if(this.state.loggedOut === true){
+      return <Logout />
+    }
 
     return (
       <div>
+        
+        <button className="logout" onClick = {this.handleLogout}>Log out</button>
+       
         <Addtodo addToDo={this.handleSubmit} />
         {/* <Todolist todo={todo.task}/> */}
         {todos.map(todo => (

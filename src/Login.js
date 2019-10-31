@@ -24,6 +24,7 @@ class Login extends React.Component {
     super();
     this.state = {
       loggedIn: "false"
+      
     };
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -58,7 +59,7 @@ class Login extends React.Component {
       .post("http://127.0.0.1:5000/login", data)
       .then(data => {
         if (data.data.access_token === undefined) {
-          alert(data.data.message);
+          alert("cannot sign in. Please try again or register a new account");
         }
         cookie.save("Access Token", data.data.access_token, { path: "/" });
         console.log("added to cookies", cookie.load("Access Token"));
@@ -108,7 +109,7 @@ class Login extends React.Component {
               <label>
                 Password:
                 <input
-                  type="text"
+                  type="password"
                   name="password"
                   value={this.state.value}
                   onChange={this.handlePassword}
